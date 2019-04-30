@@ -1,0 +1,42 @@
+{
+  "name": "@yanux/youtube-viewer",
+  "version": "1.0.0",
+  "description": "YanuX YouTube Viewer",
+  "repository": "github:YanuX-Framework/YanuX-YouTubeViewer",
+  "main": "index.js",
+  "scripts": {
+    "package": "npx webpack",
+    "serve": "npx http-server ./dist -p 3005 -c-1",
+    "watch": "npm run watch:package",
+    "watch:package": "npx webpack --watch",
+    "start": "npm-run-all --parallel serve watch",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": {
+    "name": "Pedro Albuquerque Santos",
+    "email": "pedro@albuquerques.net",
+    "url": "https://pedro.albuquerques.net"
+  },
+  "license": "AGPL-3.0",
+  "dependencies": {
+    "@fortawesome/fontawesome-free": "^5.8.1",
+    "@fortawesome/fontawesome-svg-core": "^1.2.17",
+    "@fortawesome/free-brands-svg-icons": "^5.8.1",
+    "@fortawesome/free-regular-svg-icons": "^5.8.1",
+    "@fortawesome/free-solid-svg-icons": "^5.8.1",
+    "bootstrap": "^4.3.1",
+    "http-server": "^0.11.1",
+    "npm-run-all": "^4.1.5",
+    "youtube-player": "^5.5.2"
+  },
+  "devDependencies": {
+    "css-loader": "^2.1.1",
+    "html-webpack-plugin": "^3.2.0",
+    "node-sass": "^4.12.0",
+    "sass-loader": "^7.1.0",
+    "source-map-loader": "^0.2.4",
+    "style-loader": "^0.23.1",
+    "webpack": "^4.30.0",
+    "webpack-cli": "^3.3.1"
+  }
+}

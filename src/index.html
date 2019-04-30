@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+    <title><%= htmlWebpackPlugin.options.title %></title>
+</head>
+
+<body>
+    <h1>YouTube Viewer</h1>
+    <form id="youtube-viewer-form" action="#">
+        <label for="youtube-video-url">YouTube Video URL:</label>
+        <input id="youtube-video-url" name="youtube-video-url" type="text">
+        <input value="Load" type="submit" class="btn btn-primary">
+    </form>
+    <div id="player"></div>
+    <div id="controls">
+        <input id="seekBar" name="seekBar" type="range" class="custom-range">
+        <!-- <button type="button" class="btn btn-primary"><i class="fas fa-fast-backward"></i></button> -->
+        <button type="button" class="btn btn-primary"><i class="fas fa-step-backward"></i></button>
+        <button type="button" class="btn btn-primary"><i class="fas fa-backward"></i></button>
+        <button type="button" class="btn btn-primary"><i class="fas fa-play"></i></button>
+        <button type="button" class="btn btn-primary"><i class="fas fa-pause"></i></button>
+        <button type="button" class="btn btn-primary"><i class="fas fa-stop"></i></button>
+        <button type="button" class="btn btn-primary"><i class="fas fa-forward"></i></button>
+        <button type="button" class="btn btn-primary"><i class="fas fa-step-forward"></i></button>
+        <!-- <button type="button" class="btn btn-primary"><i class="fas fa-fast-forward"></i></button> -->
+    </div>
+</body>
+
+</html>
