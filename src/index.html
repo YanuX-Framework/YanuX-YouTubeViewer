@@ -7,23 +7,37 @@
 </head>
 
 <body>
-    <h1>YouTube Viewer</h1>
-    <form id="viewer-form" action="#">
-        <label for="video-url">YouTube Video URL:</label>
-        <input id="video-url" name="video-url" type="text">
-        <input value="Load" type="submit" class="btn btn-primary">
-    </form>
-    <div id="player"></div>
-    <div id="controls">
-        <input id="seekBar" name="seekBar" type="range" min="0" max="100" value="0">
-        <button id="previousVideoButton" type="button" class="btn btn-primary"><i class="fas fa-step-backward"></i></button>
-        <button id="seekBackwardButton" type="button" class="btn btn-primary"><i class="fas fa-backward"></i></button>
-        <button id="playButton" type="button" class="btn btn-primary"><i class="fas fa-play"></i></button>
-        <button id="pauseButton" type="button" class="btn btn-primary"><i class="fas fa-pause"></i></button>
-        <button id="stopButton" type="button" class="btn btn-primary"><i class="fas fa-stop"></i></button>
-        <button id="seekForwardButton" type="button" class="btn btn-primary"><i class="fas fa-forward"></i></button>
-        <button id="nextVideoButton" type="button" class="btn btn-primary"><i class="fas fa-step-forward"></i></button>
-    </div>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <a class="navbar-brand" href="#">YouTube Viewer</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav ml-auto">
+                <li id="login" class="nav-item">
+                    <a class="nav-link" href="#">Login</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <main>
+        <form id="viewer-form" action="#">
+            <label for="video-url">YouTube Video URL:</label>
+            <input id="video-url" name="video-url" type="text">
+            <input value="Load" type="submit" class="btn btn-primary">
+        </form>
+        <div id="player"></div>
+        <div id="controls">
+            <input id="seekBar" name="seekBar" type="range" min="0" max="100" value="0">
+            <button id="seekBackwardButton" type="button" class="btn btn-primary"><i
+                    class="fas fa-backward"></i></button>
+            <button id="playButton" type="button" class="btn btn-primary"><i class="fas fa-play"></i></button>
+            <button id="pauseButton" type="button" class="btn btn-primary"><i class="fas fa-pause"></i></button>
+            <button id="stopButton" type="button" class="btn btn-primary"><i class="fas fa-stop"></i></button>
+            <button id="seekForwardButton" type="button" class="btn btn-primary"><i class="fas fa-forward"></i></button>
+        </div>
+    </main>
 </body>
 
 </html>
