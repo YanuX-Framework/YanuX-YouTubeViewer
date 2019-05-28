@@ -33,6 +33,15 @@ function extractYouTubeVideoIdFromUrl(url) {
     }
 }
 
+function printTime(time) {
+    function str_pad_left(str, pad, length) {
+        return (new Array(length + 1).join(pad) + str).slice(-length);
+    }
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time - minutes * 60);
+    return str_pad_left(minutes, '0', 2) + ':' + str_pad_left(seconds, '0', 2);
+}
+
 function initLogin() {
     const loginLink = document.querySelector('#login a');
     loginLink.textContent = 'Login'
@@ -53,32 +62,19 @@ function initLogout(username) {
 
 function updateState(player, state, prevState) {
     const playerStateUpdate = () => {
-        if (state.play) {
+        if (state.state === 'play') {
             player.playVideo();
-            prevState.play = state.play;
-        }
-        if (state.pause) {
+        } else if (state.state === 'pause') {
             player.pauseVideo();
-            prevState.pause = state.pause;
-        }
-        if (state.stop) {
+        } else if (state.stop === 'stop') {
             player.stopVideo();
-            prevState.stop = state.stop;
         }
+        prevState.state = state.state;
     }
     if (state.videoId && state.videoId != prevState.videoId) {
-        player.cueVideoById(state.videoId);
-        player.seekTo(state.currTime, true).then(() => {
-            playerStateUpdate();
-            prevState.currTime = state.currTime;
-        });
+        player.cueVideoById(state.videoId, state.currTime);
         prevState.videoId = state.videoId;
     }
-    player.getCurrentTime().then(currTime => {
-        if (Math.abs(currTime - state.currTime) > 5) {
-            player.seekTo(state.currTime, true);
-        }
-    });
     playerStateUpdate();
 }
 
@@ -91,16 +87,14 @@ function initCoordinator(coordinator) {
         });
         const prevState = {
             videoId: null,
-            play: false,
-            pause: false,
-            stop: false,
+            state: 'stop',
             currTime: 0
         }
         let initialState = results[0];
         let currState = initialState;
         if (initialState) {
-            console.log("Initial State:", initialState);
             console.log("User:", coordinator.user)
+            console.log("Initial State:", initialState);
             initLogout(coordinator.user.email);
             updateState(player, currState, prevState);
         }
@@ -109,44 +103,47 @@ function initCoordinator(coordinator) {
             console.log("State Changed:", currState);
             updateState(player, currState, prevState);
         });
+        coordinator.subscribeEvents(event => {
+            console.log("Event Subscription:", event);
+            if (event.name === "seekTo") {
+                player.seekTo(event.value, true).then(() => player.playVideo());
+            }
+        })
         //TODO:
         //Save the state of the player into an object and use it for almost everything so that it is easier to port the app to the YanuX Framework.
         //TODO: Perhaps I should do something like this:
         //https://stackoverflow.com/questions/32855634/adding-a-video-to-a-playlist-using-the-youtube-player-iframe-api
         const seekBar = document.getElementById('seekBar');
+        const playbackTimer = document.getElementById('playbackTimer');
         seekBar.value = 0;
         player.on('stateChange', e => {
             console.log('Player Status', e.data);
             switch (e.data) {
                 case 0:
                 case 5:
-                    currState.play = false;
-                    currState.pause = false;
-                    currState.stop = true;
+                    currState.state = 'stop'
                     break;
                 case 1:
-                    currState.play = true;
-                    currState.pause = false;
-                    currState.stop = false;
+                    currState.state = 'play'
                     break;
                 case 2:
-                    currState.play = false;
-                    currState.pause = true;
-                    currState.stop = false;
+                    currState.state = 'pause'
                     break;
                 default:
                     break;
             }
+            updateState(player, currState, prevState);
             let timer;
             if (e.data === 1) {
                 const updateSeekBar = () => {
                     player.getCurrentTime().then(currTime => {
                         console.log("Current Time:", currTime);
-                        seekBar.value = currTime;
                         currState.currTime = currTime;
+                        seekBar.value = currTime;
+                        playbackTimer.textContent = printTime(currTime) + '/' + printTime(currState.duration);
                         coordinator.setResourceData(currState);
                     });
-                    if (currState.play) {
+                    if (currState.state === 'play') {
                         timer = setTimeout(updateSeekBar, 1000);
                     } else {
                         clearTimeout(timer);
@@ -154,7 +151,9 @@ function initCoordinator(coordinator) {
                 };
                 seekBar.onchange = function (e) {
                     console.log('seekBar change:', this.value);
-                    player.seekTo(this.value, true).then(() => player.playVideo());
+                    coordinator.emitEvent(parseFloat(this.value), "seekTo")
+                        .then(event => console.log('Log Event Promise', event))
+                        .catch(err => console.error('Log Event Error', err));
                 }
                 seekBar.onmousedown = function (e) {
                     console.log('seekBar onmousedown:', this.value);
@@ -163,58 +162,56 @@ function initCoordinator(coordinator) {
                 player.getDuration().then(duration => {
                     console.log("Duration:", duration);
                     seekBar.max = duration;
+                    currState.duration = duration;
+                    coordinator.setResourceData(currState);
                 });
                 updateSeekBar();
             }
         });
-
         const viewerForm = document.getElementById('viewer-form')
         viewerForm.onsubmit = e => {
             const videoUrl = document.getElementById('video-url').value;
             const videoId = extractYouTubeVideoIdFromUrl(videoUrl);
-            currState.videoId = videoId;
+            currState = {
+                videoId,
+                state: 'stop',
+                currTime: 0,
+                duration: 0
+            }
             coordinator.setResourceData(currState);
             e.preventDefault();
         };
-
         const playButton = document.getElementById('playButton');
         playButton.onclick = e => {
-            currState.play = true;
-            currState.pause = false;
-            currState.stop = false;
+            currState.state = 'play';
             coordinator.setResourceData(currState);
         };
-
         const pauseButton = document.getElementById('pauseButton');
         pauseButton.onclick = e => {
-            currState.play = false;
-            currState.pause = true;
-            currState.stop = false;
+            currState.state = 'pause';
             coordinator.setResourceData(currState);
         };
-
         const stopButton = document.getElementById('stopButton');
         stopButton.onclick = e => {
-            currState.play = false;
-            currState.pause = false;
-            currState.stop = true;
+            currState.state = 'stop';
             coordinator.setResourceData(currState);
         }
-
         const seekBackwardButton = document.getElementById('seekBackwardButton');
         seekBackwardButton.onclick = e => {
             player.getCurrentTime()
-                .then(currTime => player.seekTo(currTime - 5, true))
-                .then(() => player.playVideo());
+                .then(currTime => {
+                    currState.currTime = currTime - 5;
+                    player.seekTo(currState.currTime, true)
+                }).then(() => player.playVideo());
         };
-
         const seekForwardButton = document.getElementById('seekForwardButton');
         seekForwardButton.onclick = e => {
             player.getCurrentTime()
-                .then(currTime => player.seekTo(currTime + 5, true))
-                .then(() => player.playVideo());
+                .then(currTime => {
+                    currState.currTime = currTime + 5;
+                    player.seekTo(currState.currTime, true)
+                }).then(() => player.playVideo());
         };
-
     }).catch(e => {
         console.error(e);
         coordinator.logout();
@@ -249,5 +246,4 @@ function main() {
         });
     }
 }
-
 main();

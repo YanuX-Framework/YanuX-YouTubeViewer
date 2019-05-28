@@ -29,7 +29,10 @@
         </form>
         <div id="player"></div>
         <div id="controls">
-            <input id="seekBar" name="seekBar" type="range" min="0" max="100" value="0">
+            <div class="input-group">
+                <input id="seekBar" class="form-control" name="seekBar" type="range" min="0" max="100" value="0">
+                <span id="playbackTimer" class="input-group-text">00:00/00:00</span>
+            </div>
             <button id="seekBackwardButton" type="button" class="btn btn-primary"><i
                     class="fas fa-backward"></i></button>
             <button id="playButton" type="button" class="btn btn-primary"><i class="fas fa-play"></i></button>
