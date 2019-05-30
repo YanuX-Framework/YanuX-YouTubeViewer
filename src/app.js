@@ -70,6 +70,52 @@ function initDisplay(params) {
     $(".yx-always-visible").css("display", "block");
 }
 
+function updateProxemics(coordinator, proxemics) {
+    const localDeviceUuid = coordinator.device.deviceUuid;
+    console.log("Proxemics:", proxemics);
+    console.log("Local Device UUID:", localDeviceUuid);
+    const componentsDistribution = _.cloneDeep(proxemics);
+    let componentsConfig;
+    coordinator.getActiveInstances().then(activeInstances => {
+        if (proxemics[localDeviceUuid]) {
+            const viewAndControlDevices = _.pickBy(proxemics, (caps, deviceUuid) => {
+                return caps.view === true && caps.control === true && _.some(activeInstances, instance => deviceUuid === instance.device.deviceUuid);
+            });
+            const viewOnlyDevices = _.pickBy(proxemics, (caps, deviceUuid) => {
+                return caps.view === true && caps.control === false && _.some(activeInstances, instance => deviceUuid === instance.device.deviceUuid);
+            });
+            const controlOnlyDevices = _.pickBy(proxemics, (caps, deviceUuid) => {
+                return caps.view === false && caps.control === true && _.some(activeInstances, instance => deviceUuid === instance.device.deviceUuid);
+            });
+            if (!_.isEmpty(viewOnlyDevices)) {
+                for (let deviceUuid in viewAndControlDevices) {
+                    componentsDistribution[deviceUuid].view = false;
+                }
+            }
+            if (!_.isEmpty(controlOnlyDevices)) {
+                for (let deviceUuid in viewAndControlDevices) {
+                    componentsDistribution[deviceUuid].control = false;
+                }
+            }
+            componentsConfig = componentsDistribution[localDeviceUuid];
+        } else {
+            componentsConfig = defaultComponentsConfig;
+        }
+        console.log("Components Config:", componentsConfig);
+        if (componentsConfig.view) {
+            $(".yx-view").css("display", "block");
+        } else {
+            $(".yx-view").css("display", "none");
+        }
+        if (componentsConfig.control) {
+            $(".yx-control").css("display", "block");
+        } else {
+            $(".yx-control").css("display", "none");
+        }
+        $(".yx-always-visible").css("display", "block");
+    });
+}
+
 function initLogin() {
     const loginLink = document.querySelector('#login a');
     loginLink.textContent = 'Login'
@@ -77,9 +123,9 @@ function initLogin() {
     loginLink.onclick = null;
 }
 
-function initLogout(username) {
+function initLogout(coordinator) {
     const loginLink = document.querySelector('#login a');
-    loginLink.textContent = 'Logout ' + username;
+    loginLink.textContent = 'Logout ' + coordinator.user.email;
     loginLink.href = '#'
     loginLink.onclick = e => {
         coordinator.logout();
@@ -88,60 +134,94 @@ function initLogout(username) {
     }
 }
 
-function updateState(player, state, prevState) {
-    if (state.videoId && state.videoId !== prevState.videoId) {
-        player.cueVideoById(state.videoId, state.currTime);
-        prevState.videoId = state.videoId;
+function updatePlayer(player, state, prevState) {
+    if ($('#player').css('display') !== 'none') {
+        if (!player) {
+            player = YouTubePlayer('player', {
+                width: 1920,
+                height: 1080,
+                playerVars: { controls: 0 }
+            });
+            player.cueVideoById(state.videoId, state.currTime);
+        }
     }
-    if (state.state === 'play') {
-        player.playVideo();
-    } else if (state.state === 'pause') {
-        player.pauseVideo();
-    } else if (state.stop === 'stop') {
-        player.stopVideo();
+    if (player && state.videoId && state.videoId !== prevState.videoId) {
+        player.cueVideoById(state.videoId, state.currTime);
+    }
+    if (player && $('#player').css('display') !== 'none') {
+        if (state.state === 'play') {
+            player.playVideo();
+            player.getCurrentTime(currTime => {
+                if (Math.abs(currTime - state.currTime) > 5) {
+                    player.seekTo(state.currTime, true);
+                }
+            })
+        } else if (state.state === 'pause') {
+            player.pauseVideo();
+        } else if (state.state === 'stop') {
+            player.stopVideo();
+        }
+    } else if (player) {
+        player.destroy();
+        player = null;
     }
     const seekBar = document.getElementById('seekBar');
     const playbackTimer = document.getElementById('playbackTimer');
     seekBar.value = Math.floor(state.currTime);
     seekBar.max = Math.floor(state.duration);
     playbackTimer.textContent = printTime(state.currTime) + '/' + printTime(state.duration);
-    prevState = state;
+    _.assign(prevState, state);
+    return { state, prevState, player };
 }
+
 
 function initCoordinator(coordinator) {
     coordinator.init().then(results => {
-        const player = YouTubePlayer('player', {
-            width: 1920,
-            height: 1080,
-            playerVars: { controls: 0 }
-        });
         const prevState = {
             videoId: null,
             state: 'stop',
             currTime: 0
         }
-        let initialState = results[0];
+        const initialState = results[0];
+        const initialProxemics = results[1];
         let currState = initialState;
-        if (initialState) {
+        let player;
+        const update = () => {
+            updateProxemics(coordinator, coordinator.proxemics.state)
+            const stateUpdate = updatePlayer(player, currState, prevState);
+            player = stateUpdate.player;
+        }
+        if (initialState && initialProxemics) {
             console.log("User:", coordinator.user)
             console.log("Initial State:", initialState);
-            initLogout(coordinator.user.email);
-            updateState(player, currState, prevState);
+            console.log("Initial Proxemics:", initialProxemics);
+            initLogout(coordinator);
+            update();
         }
         coordinator.subscribeResource(state => {
             currState = state;
             console.log("State Changed:", currState);
-            updateState(player, currState, prevState);
+            update();
+        });
+        updateProxemics(coordinator, initialProxemics);
+        coordinator.subscribeProxemics(proxemics => {
+            console.log('Proxemics', proxemics);
+            update();
+
+        });
+        coordinator.subscribeInstances(instance => {
+            console.log('Instances', instance);
+            update();
         });
         coordinator.subscribeEvents(event => {
             console.log("Event Subscription:", event);
-            if (event.name === "seekTo") {
+            if (player && event.name === "seekTo") {
                 player.seekTo(event.value.time, true);
                 if (event.value.state === 'play') {
                     player.playVideo();
                 }
             }
-        })
+        });
         //TODO:
         //Save the state of the player into an object and use it for almost everything so that it is easier to port the app to the YanuX Framework.
         //TODO: Perhaps I should do something like this:
@@ -150,7 +230,9 @@ function initCoordinator(coordinator) {
         let seekBarPlaybackState = currState.state;
         seekBar.onmousedown = function (e) {
             console.log('seekBar onmousedown:', this.value);
-            player.seekTo(this.value, false);
+            if (player) {
+                player.seekTo(this.value, false);
+            }
         }
         seekBar.onchange = function (e) {
             console.log('seekBar change:', this.value);
@@ -159,47 +241,51 @@ function initCoordinator(coordinator) {
                 .catch(err => console.error('Log Event Error', err));
         }
         seekBar.value = 0;
-        player.on('stateChange', e => {
-            console.log('Player Status', e.data);
-            switch (e.data) {
-                case 0:
-                case 5:
-                    currState.state = 'stop'
-                    break;
-                case 1:
-                case 3:
-                    currState.state = 'play'
-                    break;
-                case 2:
-                    currState.state = 'pause'
-                    break;
-                default:
-                    currState.state = 'stop'
-                    break;
-            }
-            let timer;
-            if (e.data === 1) {
-                const updateSeekBar = () => {
-                    player.getCurrentTime().then(currTime => {
-                        console.log("Current Time:", currTime);
-                        currState.currTime = currTime;
+        if (player) {
+            player.on('stateChange', e => {
+                console.log('Player Status', e.data);
+                switch (e.data) {
+                    case 0:
+                    case 5:
+                        currState.state = 'stop'
+                        break;
+                    case 1:
+                    case 3:
+                        currState.state = 'play'
+                        break;
+                    case 2:
+                        currState.state = 'pause'
+                        break;
+                    default:
+                        currState.state = 'stop'
+                        break;
+                }
+                let timer;
+                if (e.data === 1) {
+                    const updateSeekBar = () => {
+                        player.getCurrentTime().then(currTime => {
+                            console.log("Current Time:", currTime);
+                            if (currState.currTime !== currTime) {
+                                currState.currTime = currTime;
+                                coordinator.setResourceData(currState);
+                            }
+                        });
+                        if (currState.state === 'play') {
+                            timer = setTimeout(updateSeekBar, 1000);
+                        } else {
+                            clearTimeout(timer);
+                        }
+                    };
+                    seekBarPlaybackState = currState.state;
+                    player.getDuration().then(duration => {
+                        console.log("Duration:", duration);
+                        currState.duration = duration;
                         coordinator.setResourceData(currState);
                     });
-                    if (currState.state === 'play') {
-                        timer = setTimeout(updateSeekBar, 1000);
-                    } else {
-                        clearTimeout(timer);
-                    }
-                };
-                seekBarPlaybackState = currState.state;
-                player.getDuration().then(duration => {
-                    console.log("Duration:", duration);
-                    currState.duration = duration;
-                    coordinator.setResourceData(currState);
-                });
-                updateSeekBar();
-            }
-        });
+                    updateSeekBar();
+                }
+            });
+        }
         const viewerForm = document.getElementById('viewer-form')
         viewerForm.onsubmit = e => {
             const videoUrl = document.getElementById('video-url').value;
@@ -258,14 +344,13 @@ function main() {
         params.localDeviceUrl || "http://localhost:3003",
         params.app || "yanux-youtube-viewer"
     );
-    window.coordinator = coordinator;
     initDisplay(params);
     initLogin();
     if (!params.access_token) {
         sessionStorage.setItem('hash', window.location.hash);
     }
     if (coordinator.credentials) {
-        initCoordinator(coordinator);
+        initCoordinator(coordinator, player);
     } else if (params.access_token) {
         coordinator.credentials = new Credentials("yanux", [
             params.access_token,
