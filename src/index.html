@@ -24,13 +24,75 @@
         </nav>
     </header>
     <main>
-        <form id="viewer-form" class="yx-control" action="#">
+        <form id="viewer-form" class="yx-control" data-yx-requirements='{
+            "display": true,
+            "input": { 
+                        "operator": "OR",
+                        "values": [{
+                                    "operator":"AND", 
+                                    "values": ["keyboard","pointing device"]
+                                   },
+                                   "touchscreen"]
+                     }
+        }' action="#">
             <label for="video-url">YouTube Video URL:</label>
             <input id="video-url" name="video-url" type="text">
             <input value="Load" type="submit" class="btn btn-primary">
         </form>
-        <div id="player" class="yx-view"></div>
-        <div id="controls" class="yx-control">
+        <div id="player" class="yx-view" data-yx-requirements='
+        {
+            "display": {
+                    "operator": "AND",
+                    "values": {
+                    "resolution": {
+                        "operator": ">=",
+                        "value": [1280, null],
+                        "enforce": true
+                    },
+                    "size": {
+                        "operator": ">=",
+                        "value": [160, 90],
+                        "enforce": false
+                    },
+                    "pixelRatio": {
+                        "operator": "NOT",
+                        "values": {
+                            "operator": ">",
+                            "value": 2.0
+                        },
+                        "enforce": false
+                    }
+                }
+            },
+            "speakers": {
+                "channels": {
+                    "operator": "AND",
+                    "values": [
+                                {
+                                    "operator": ">=",
+                                    "values": 2,
+                                    "enforce": false
+                                },
+                                {
+                                    "operator": ">=",
+                                    "values": 1,
+                                    "enforce": true
+                                }
+                    ]
+                }
+            }
+        }'></div>
+        <div id="controls" class="yx-control" data-yx-requirements='{
+            "display": true,
+            "input": { 
+                        "operator": "OR",
+                        "values": [{
+                                    "operator":"AND", 
+                                    "values": ["keyboard","pointing device"]
+                                   },
+                                   "touchscreen"]
+                     }
+        }'>
             <div class="input-group">
                 <input id="seekBar" class="form-control" name="seekBar" type="range" min="0" max="100" value="0">
                 <span id="playbackTimer" class="input-group-text">00:00/00:00</span>
