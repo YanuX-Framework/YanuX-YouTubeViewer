@@ -24,6 +24,73 @@ import YouTubePlayer from 'youtube-player';
 //YanuX Coordinator
 import { FeathersCoordinator, Credentials } from "@yanux/coordinator";
 
+const yxRestrictions = {
+    "viewer-form": {
+        "display": true,
+        "input": {
+            "operator": "OR",
+            "values": [{
+                "operator": "AND",
+                "values": ["keyboard", "pointing device"]
+            },
+                "touchscreen"]
+        }
+    },
+    "player": {
+        "display": {
+            "operator": "AND",
+            "values": {
+                "resolution": {
+                    "operator": ">=",
+                    "value": [1280, null],
+                    "enforce": true
+                },
+                "size": {
+                    "operator": ">=",
+                    "value": [160, 90],
+                    "enforce": false
+                },
+                "pixelRatio": {
+                    "operator": "NOT",
+                    "values": {
+                        "operator": ">",
+                        "value": 2.0
+                    },
+                    "enforce": false
+                }
+            }
+        },
+        "speakers": {
+            "channels": {
+                "operator": "AND",
+                "values": [
+                    {
+                        "operator": ">=",
+                        "values": 2,
+                        "enforce": false
+                    },
+                    {
+                        "operator": ">=",
+                        "values": 1,
+                        "enforce": true
+                    }
+                ]
+            }
+        }
+    },
+    "controls": {
+        "display": true,
+        "input": {
+            "operator": "OR",
+            "values": [{
+                "operator": "AND",
+                "values": ["keyboard", "pointing device"]
+            },
+                "touchscreen"]
+        }
+    }
+}
+
 
 function extractYouTubeVideoIdFromUrl(url) {
     var regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#\&\?]*).*/;
