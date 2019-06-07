@@ -22,18 +22,17 @@ import * as queryString from "query-string";
 //YouTube Player API
 import YouTubePlayer from 'youtube-player';
 //YanuX Coordinator
-import { FeathersCoordinator, Credentials } from "@yanux/coordinator";
+import { FeathersCoordinator, Credentials, ComponentsRuleEngine } from "@yanux/coordinator";
 
-const yxRestrictions = {
+const componentsRestrictions = {
     "viewer-form": {
         "display": true,
         "input": {
             "operator": "OR",
             "values": [{
                 "operator": "AND",
-                "values": ["keyboard", "pointing device"]
-            },
-                "touchscreen"]
+                "values": ["keyboard", "mouse"]
+            }, "touchscreen"]
         }
     },
     "player": {
@@ -43,8 +42,8 @@ const yxRestrictions = {
                 "resolution": {
                     "operator": ">=",
                     "value": [1280, null],
-                    "enforce": true
                 },
+                /*
                 "size": {
                     "operator": ">=",
                     "value": [160, 90],
@@ -58,6 +57,7 @@ const yxRestrictions = {
                     },
                     "enforce": false
                 }
+                */
             }
         },
         "speakers": {
@@ -66,13 +66,12 @@ const yxRestrictions = {
                 "values": [
                     {
                         "operator": ">=",
-                        "values": 2,
-                        "enforce": false
+                        "value": 2,
+                        "enforce": true
                     },
                     {
                         "operator": ">=",
-                        "values": 1,
-                        "enforce": true
+                        "value": 1,
                     }
                 ]
             }
@@ -84,9 +83,8 @@ const yxRestrictions = {
             "operator": "OR",
             "values": [{
                 "operator": "AND",
-                "values": ["keyboard", "pointing device"]
-            },
-                "touchscreen"]
+                "values": ["keyboard", "mouse"]
+            }, "touchscreen"]
         }
     }
 }
@@ -111,75 +109,41 @@ function printTime(time) {
     return str_pad_left(minutes, '0', 2) + ':' + str_pad_left(seconds, '0', 2);
 }
 
-const defaultComponentsConfig = {
-    view: false,
-    control: false
+function applyComponentsConfig(componentsConfig) {
+    for (const component in componentsConfig) {
+        if (componentsConfig[component]) {
+            $("#" + component).css("display", "block");
+        } else {
+            $("#" + component).css("display", "none");
+        }
+    }
 }
+
 function initDisplay(params) {
-    const displayClasses = params.displayClasses || "yx-view, yx-control";
-    const hiddenClasses = params.hiddenClasses || "yx-view, yx-control";
-    hiddenClasses.split(",").forEach(c => {
-        $("." + c.trim()).css("display", "none");
-    });
-    displayClasses.split(",").forEach(c => {
-        $("." + c.trim()).css("display", "block")
-    });
-    if ($(".yx-view").css("display") === 'block') {
-        defaultComponentsConfig.view = true;
-    } else {
-        defaultComponentsConfig.view = false;
+    const componentsConfig = {}
+    if (params.hiddenComponents) {
+        params.hiddenComponents.split(",").forEach(c => {
+            componentsConfig[c] = false;
+        });
     }
-    if ($(".yx-control").css("display") === 'block') {
-        defaultComponentsConfig.control = true;
-    } else {
-        defaultComponentsConfig.control = false;
+    if (params.displayedComponents) {
+        params.displayedComponents.split(",").forEach(c => {
+            componentsConfig[c] = true;
+        });
     }
-    $(".yx-always-visible").css("display", "block");
+    applyComponentsConfig(componentsConfig);
 }
 
 function updateProxemics(coordinator, proxemics) {
     const localDeviceUuid = coordinator.device.deviceUuid;
     console.log("Proxemics:", proxemics);
     console.log("Local Device UUID:", localDeviceUuid);
-    const componentsDistribution = _.cloneDeep(proxemics);
-    let componentsConfig;
     coordinator.getActiveInstances().then(activeInstances => {
-        if (proxemics[localDeviceUuid]) {
-            const viewAndControlDevices = _.pickBy(proxemics, (caps, deviceUuid) => {
-                return caps.view === true && caps.control === true && _.some(activeInstances, instance => deviceUuid === instance.device.deviceUuid);
-            });
-            const viewOnlyDevices = _.pickBy(proxemics, (caps, deviceUuid) => {
-                return caps.view === true && caps.control === false && _.some(activeInstances, instance => deviceUuid === instance.device.deviceUuid);
-            });
-            const controlOnlyDevices = _.pickBy(proxemics, (caps, deviceUuid) => {
-                return caps.view === false && caps.control === true && _.some(activeInstances, instance => deviceUuid === instance.device.deviceUuid);
-            });
-            if (!_.isEmpty(viewOnlyDevices)) {
-                for (let deviceUuid in viewAndControlDevices) {
-                    componentsDistribution[deviceUuid].view = false;
-                }
-            }
-            if (!_.isEmpty(controlOnlyDevices)) {
-                for (let deviceUuid in viewAndControlDevices) {
-                    componentsDistribution[deviceUuid].control = false;
-                }
-            }
-            componentsConfig = componentsDistribution[localDeviceUuid];
-        } else {
-            componentsConfig = defaultComponentsConfig;
-        }
-        console.log("Components Config:", componentsConfig);
-        if (componentsConfig.view) {
-            $(".yx-view").css("display", "block");
-        } else {
-            $(".yx-view").css("display", "none");
-        }
-        if (componentsConfig.control) {
-            $(".yx-control").css("display", "block");
-        } else {
-            $(".yx-control").css("display", "none");
-        }
-        $(".yx-always-visible").css("display", "block");
+        const componentsRuleEngine = new ComponentsRuleEngine(localDeviceUuid, activeInstances, proxemics, componentsRestrictions);
+        componentsRuleEngine.run().then(data => {
+            console.log('Components Config:', data.componentsConfig);
+            applyComponentsConfig(data.componentsConfig);
+        });
     });
 }
 
