@@ -14,77 +14,77 @@ library.add(fab);
 dom.watch();
 
 //lodash
-import _ from "lodash";
+import _ from 'lodash';
 //jQuery
-import $ from "jquery";
+import $ from 'jquery';
 //query-string
-import * as queryString from "query-string";
+import * as queryString from 'query-string';
 //YouTube Player API
 import YouTubePlayer from 'youtube-player';
 //YanuX Coordinator
-import { FeathersCoordinator, Credentials, ComponentsRuleEngine } from "@yanux/coordinator";
+import { FeathersCoordinator, Credentials, ComponentsRuleEngine } from '@yanux/coordinator';
 
 const componentsRestrictions = {
-    "viewer-form": {
-        "display": true,
-        "input": {
-            "operator": "OR",
-            "values": [{
-                "operator": "AND",
-                "values": ["keyboard", "mouse"]
-            }, "touchscreen"]
+    'viewer-form': {
+        'display': true,
+        'input': {
+            'operator': 'OR',
+            'values': [{
+                'operator': 'AND',
+                'values': ['keyboard', 'mouse']
+            }, 'touchscreen']
         }
     },
-    "player": {
-        "display": {
-            "operator": "AND",
-            "values": {
-                "resolution": {
-                    "operator": ">=",
-                    "value": [1280, null],
+    'player': {
+        'display': {
+            'operator': 'AND',
+            'values': {
+                'resolution': {
+                    'operator': '>=',
+                    'value': [1280, null],
                 },
                 /*
-                "size": {
-                    "operator": ">=",
-                    "value": [160, 90],
-                    "enforce": false
+                'size': {
+                    'operator': '>=',
+                    'value': [160, 90],
+                    'enforce': false
                 },
-                "pixelRatio": {
-                    "operator": "NOT",
-                    "values": {
-                        "operator": ">",
-                        "value": 2.0
+                'pixelRatio': {
+                    'operator': 'NOT',
+                    'values': {
+                        'operator': '>',
+                        'value': 2.0
                     },
-                    "enforce": false
+                    'enforce': false
                 }
                 */
             }
         },
-        "speakers": {
-            "channels": {
-                "operator": "AND",
-                "values": [
+        'speakers': {
+            'channels': {
+                'operator': 'AND',
+                'values': [
                     {
-                        "operator": ">=",
-                        "value": 2,
-                        "enforce": true
+                        'operator': '>=',
+                        'value': 2,
+                        'enforce': true
                     },
                     {
-                        "operator": ">=",
-                        "value": 1,
+                        'operator': '>=',
+                        'value': 1,
                     }
                 ]
             }
         }
     },
-    "controls": {
-        "display": true,
-        "input": {
-            "operator": "OR",
-            "values": [{
-                "operator": "AND",
-                "values": ["keyboard", "mouse"]
-            }, "touchscreen"]
+    'controls': {
+        'display': true,
+        'input': {
+            'operator': 'OR',
+            'values': [{
+                'operator': 'AND',
+                'values': ['keyboard', 'mouse']
+            }, 'touchscreen']
         }
     }
 }
@@ -96,7 +96,7 @@ function extractYouTubeVideoIdFromUrl(url) {
     if (match && match[7].length == 11) {
         return match[7];
     } else {
-        alert("Could not extract an YouTube video ID.");
+        alert('Could not extract an YouTube video ID.');
     }
 }
 
@@ -112,9 +112,9 @@ function printTime(time) {
 function applyComponentsConfig(componentsConfig) {
     for (const component in componentsConfig) {
         if (componentsConfig[component]) {
-            $("#" + component).css("display", "block");
+            $('#' + component).css('display', 'block');
         } else {
-            $("#" + component).css("display", "none");
+            $('#' + component).css('display', 'none');
         }
     }
 }
@@ -122,12 +122,12 @@ function applyComponentsConfig(componentsConfig) {
 function initDisplay(params) {
     const componentsConfig = {}
     if (params.hiddenComponents) {
-        params.hiddenComponents.split(",").forEach(c => {
+        params.hiddenComponents.split(',').forEach(c => {
             componentsConfig[c] = false;
         });
     }
     if (params.displayedComponents) {
-        params.displayedComponents.split(",").forEach(c => {
+        params.displayedComponents.split(',').forEach(c => {
             componentsConfig[c] = true;
         });
     }
@@ -136,8 +136,8 @@ function initDisplay(params) {
 
 function updateProxemics(coordinator, proxemics) {
     const localDeviceUuid = coordinator.device.deviceUuid;
-    console.log("Proxemics:", proxemics);
-    console.log("Local Device UUID:", localDeviceUuid);
+    console.log('Proxemics:', proxemics);
+    console.log('Local Device UUID:', localDeviceUuid);
     coordinator.getActiveInstances().then(activeInstances => {
         const componentsRuleEngine = new ComponentsRuleEngine(localDeviceUuid, activeInstances, proxemics, componentsRestrictions);
         componentsRuleEngine.run().then(data => {
@@ -223,15 +223,15 @@ function initCoordinator(coordinator) {
             player = stateUpdate.player;
         }
         if (initialState && initialProxemics) {
-            console.log("User:", coordinator.user)
-            console.log("Initial State:", initialState);
-            console.log("Initial Proxemics:", initialProxemics);
+            console.log('User:', coordinator.user)
+            console.log('Initial State:', initialState);
+            console.log('Initial Proxemics:', initialProxemics);
             initLogout(coordinator);
             update();
         }
         coordinator.subscribeResource(state => {
             currState = state;
-            console.log("State Changed:", currState);
+            console.log('State Changed:', currState);
             update();
         });
         updateProxemics(coordinator, initialProxemics);
@@ -245,8 +245,8 @@ function initCoordinator(coordinator) {
             update();
         });
         coordinator.subscribeEvents(event => {
-            console.log("Event Subscription:", event);
-            if (player && event.name === "seekTo") {
+            console.log('Event Subscription:', event);
+            if (player && event.name === 'seekTo') {
                 player.seekTo(event.value.time, true);
                 if (event.value.state === 'play') {
                     player.playVideo();
@@ -295,7 +295,7 @@ function initCoordinator(coordinator) {
                 if (e.data === 1) {
                     const updateSeekBar = () => {
                         player.getCurrentTime().then(currTime => {
-                            console.log("Current Time:", currTime);
+                            console.log('Current Time:', currTime);
                             if (currState.currTime !== currTime) {
                                 currState.currTime = currTime;
                                 coordinator.setResourceData(currState);
@@ -309,7 +309,7 @@ function initCoordinator(coordinator) {
                     };
                     seekBarPlaybackState = currState.state;
                     player.getDuration().then(duration => {
-                        console.log("Duration:", duration);
+                        console.log('Duration:', duration);
                         currState.duration = duration;
                         coordinator.setResourceData(currState);
                     });
@@ -369,11 +369,11 @@ function initCoordinator(coordinator) {
 
 function main() {
     const params = queryString.parse(location.hash);
-    console.log("Params:", params);
+    console.log('Params:', params);
     const coordinator = new FeathersCoordinator(
         params.brokerUrl || `http://${window.location.hostname}:3002`,
-        params.localDeviceUrl || "http://localhost:3003",
-        params.app || "yanux-youtube-viewer"
+        params.localDeviceUrl || 'http://localhost:3003',
+        params.app || 'yanux-youtube-viewer'
     );
     initDisplay(params);
     initLogin();
@@ -383,9 +383,9 @@ function main() {
     if (coordinator.credentials) {
         initCoordinator(coordinator, player);
     } else if (params.access_token) {
-        coordinator.credentials = new Credentials("yanux", [
+        coordinator.credentials = new Credentials('yanux', [
             params.access_token,
-            params.app || "yanux-youtube-viewer"
+            params.app || 'yanux-youtube-viewer'
         ]);
         coordinator.init().then(data => {
             location.hash = sessionStorage.getItem('hash');
