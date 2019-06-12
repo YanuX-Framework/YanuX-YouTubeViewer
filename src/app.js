@@ -26,6 +26,24 @@ import { FeathersCoordinator, Credentials, ComponentsRuleEngine } from '@yanux/c
 
 const componentsRestrictions = {
     'viewer-form': {
+        'type': {
+            'value': 'smartphone',
+            'enforce': false
+        },
+        'display': true,
+        'input': {
+            'operator': 'OR',
+            'values': [{
+                'operator': 'AND',
+                'values': ['keyboard', 'mouse']
+            }, 'touchscreen']
+        }
+    },
+    'controls': {
+        'type': {
+            'value': 'smartphone',
+            'enforce': false
+        },
         'display': true,
         'input': {
             'operator': 'OR',
@@ -41,23 +59,13 @@ const componentsRestrictions = {
             'values': {
                 'resolution': {
                     'operator': '>=',
-                    'value': [1280, null],
+                    'value': [960, null],
                 },
-                /*
                 'size': {
                     'operator': '>=',
                     'value': [160, 90],
                     'enforce': false
-                },
-                'pixelRatio': {
-                    'operator': 'NOT',
-                    'values': {
-                        'operator': '>',
-                        'value': 2.0
-                    },
-                    'enforce': false
                 }
-                */
             }
         },
         'speakers': {
@@ -67,7 +75,7 @@ const componentsRestrictions = {
                     {
                         'operator': '>=',
                         'value': 2,
-                        'enforce': true
+                        'enforce': false
                     },
                     {
                         'operator': '>=',
@@ -75,16 +83,6 @@ const componentsRestrictions = {
                     }
                 ]
             }
-        }
-    },
-    'controls': {
-        'display': true,
-        'input': {
-            'operator': 'OR',
-            'values': [{
-                'operator': 'AND',
-                'values': ['keyboard', 'mouse']
-            }, 'touchscreen']
         }
     }
 }
@@ -138,11 +136,14 @@ function updateProxemics(coordinator, proxemics) {
     const localDeviceUuid = coordinator.device.deviceUuid;
     console.log('Proxemics:', proxemics);
     console.log('Local Device UUID:', localDeviceUuid);
-    coordinator.getActiveInstances().then(activeInstances => {
-        const componentsRuleEngine = new ComponentsRuleEngine(localDeviceUuid, activeInstances, proxemics, componentsRestrictions);
-        componentsRuleEngine.run().then(data => {
-            console.log('Components Config:', data.componentsConfig);
-            applyComponentsConfig(data.componentsConfig);
+    return new Promise((resolve, reject) => {
+        coordinator.getActiveInstances().then(activeInstances => {
+            const componentsRuleEngine = new ComponentsRuleEngine(localDeviceUuid, activeInstances, proxemics, componentsRestrictions);
+            componentsRuleEngine.run().then(data => {
+                console.log('Components Config:', data.componentsConfig);
+                applyComponentsConfig(data.componentsConfig);
+                resolve();
+            }).catch(e => reject(e));
         });
     });
 }
@@ -165,7 +166,7 @@ function initLogout(coordinator) {
     }
 }
 
-function updatePlayer(player, state, prevState) {
+function updatePlayer(player, state, prevState, coordinator) {
     if ($('#player').css('display') !== 'none') {
         if (!player) {
             player = YouTubePlayer('player', {
@@ -173,8 +174,51 @@ function updatePlayer(player, state, prevState) {
                 height: 1080,
                 playerVars: { controls: 0 }
             });
+            player.on('stateChange', e => {
+                console.log('Player Status', e.data);
+                switch (e.data) {
+                    case 0:
+                    case 5:
+                        state.state = 'stop'
+                        break;
+                    case 1:
+                    case 3:
+                        state.state = 'play'
+                        break;
+                    case 2:
+                        state.state = 'pause'
+                        break;
+                    default: break;
+                }
+                if (e.data === 1) {
+                    const updateSeekBar = () => {
+                        player.getCurrentTime().then(currTime => {
+                            console.log('Current Time:', currTime);
+                            if (state.currTime !== currTime) {
+                                state.currTime = currTime;
+                                coordinator.setResourceData(state);
+                            }
+                        });
+                        if (state.state === 'play') {
+                            player.timer = setTimeout(updateSeekBar, 1000);
+                        } else {
+                            clearTimeout(player.timer);
+                        }
+                    };
+                    player.getDuration().then(duration => {
+                        console.log('Duration:', duration);
+                        state.duration = duration;
+                        coordinator.setResourceData(state);
+                    });
+                    updateSeekBar();
+                }
+            });
             player.cueVideoById(state.videoId, state.currTime);
         }
+    } else if (player) {
+        clearTimeout(player.timer);
+        player.destroy();
+        player = null;
     }
     if (player && state.videoId && state.videoId !== prevState.videoId) {
         player.cueVideoById(state.videoId, state.currTime);
@@ -192,9 +236,6 @@ function updatePlayer(player, state, prevState) {
         } else if (state.state === 'stop') {
             player.stopVideo();
         }
-    } else if (player) {
-        player.destroy();
-        player = null;
     }
     const seekBar = document.getElementById('seekBar');
     const playbackTimer = document.getElementById('playbackTimer');
@@ -218,9 +259,10 @@ function initCoordinator(coordinator) {
         let currState = initialState;
         let player;
         const update = () => {
-            updateProxemics(coordinator, coordinator.proxemics.state)
-            const stateUpdate = updatePlayer(player, currState, prevState);
-            player = stateUpdate.player;
+            updateProxemics(coordinator, coordinator.proxemics.state).then(() => {
+                const stateUpdate = updatePlayer(player, currState, prevState, coordinator);
+                player = stateUpdate.player;
+            });
         }
         if (initialState && initialProxemics) {
             console.log('User:', coordinator.user)
@@ -234,11 +276,9 @@ function initCoordinator(coordinator) {
             console.log('State Changed:', currState);
             update();
         });
-        updateProxemics(coordinator, initialProxemics);
         coordinator.subscribeProxemics(proxemics => {
             console.log('Proxemics', proxemics);
             update();
-
         });
         coordinator.subscribeInstances(instance => {
             console.log('Instances', instance);
@@ -258,7 +298,6 @@ function initCoordinator(coordinator) {
         //TODO: Perhaps I should do something like this:
         //https://stackoverflow.com/questions/32855634/adding-a-video-to-a-playlist-using-the-youtube-player-iframe-api
         const seekBar = document.getElementById('seekBar');
-        let seekBarPlaybackState = currState.state;
         seekBar.onmousedown = function (e) {
             console.log('seekBar onmousedown:', this.value);
             if (player) {
@@ -267,56 +306,11 @@ function initCoordinator(coordinator) {
         }
         seekBar.onchange = function (e) {
             console.log('seekBar change:', this.value);
-            coordinator.emitEvent({ state: seekBarPlaybackState, time: parseFloat(this.value) }, 'seekTo')
+            coordinator.emitEvent({ state: currState.state, time: parseFloat(this.value) }, 'seekTo')
                 .then(event => console.log('Log Event Promise', event))
                 .catch(err => console.error('Log Event Error', err));
         }
         seekBar.value = 0;
-        if (player) {
-            player.on('stateChange', e => {
-                console.log('Player Status', e.data);
-                switch (e.data) {
-                    case 0:
-                    case 5:
-                        currState.state = 'stop'
-                        break;
-                    case 1:
-                    case 3:
-                        currState.state = 'play'
-                        break;
-                    case 2:
-                        currState.state = 'pause'
-                        break;
-                    default:
-                        currState.state = 'stop'
-                        break;
-                }
-                let timer;
-                if (e.data === 1) {
-                    const updateSeekBar = () => {
-                        player.getCurrentTime().then(currTime => {
-                            console.log('Current Time:', currTime);
-                            if (currState.currTime !== currTime) {
-                                currState.currTime = currTime;
-                                coordinator.setResourceData(currState);
-                            }
-                        });
-                        if (currState.state === 'play') {
-                            timer = setTimeout(updateSeekBar, 1000);
-                        } else {
-                            clearTimeout(timer);
-                        }
-                    };
-                    seekBarPlaybackState = currState.state;
-                    player.getDuration().then(duration => {
-                        console.log('Duration:', duration);
-                        currState.duration = duration;
-                        coordinator.setResourceData(currState);
-                    });
-                    updateSeekBar();
-                }
-            });
-        }
         const viewerForm = document.getElementById('viewer-form')
         viewerForm.onsubmit = e => {
             const videoUrl = document.getElementById('video-url').value;
@@ -347,17 +341,12 @@ function initCoordinator(coordinator) {
         }
         const seekBackwardButton = document.getElementById('seekBackwardButton');
         seekBackwardButton.onclick = e => {
-            player.getCurrentTime()
-                .then(currTime => {
-                    coordinator.emitEvent({ state: seekBarPlaybackState, time: currTime - 5 }, 'seekTo')
-                });
+            coordinator.emitEvent({ state: currState.state, time: currState.currTime - 5 }, 'seekTo')
+
         };
         const seekForwardButton = document.getElementById('seekForwardButton');
         seekForwardButton.onclick = e => {
-            player.getCurrentTime()
-                .then(currTime => {
-                    coordinator.emitEvent({ state: seekBarPlaybackState, time: currTime + 5 }, 'seekTo')
-                });
+            coordinator.emitEvent({ state: currState.state, time: currState.currTime + 5 }, 'seekTo')
         };
     }).catch(e => {
         console.error(e);
