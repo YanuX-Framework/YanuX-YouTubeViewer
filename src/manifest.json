@@ -1,0 +1,21 @@
+{
+    "short_name": "YouTube Viewer",
+    "name": "YanuX YouTube Viewer",
+    "icons": [
+      {
+        "src": "/images/icon-192.png",
+        "type": "image/png",
+        "sizes": "192x192"
+      },
+      {
+        "src": "/images/icon-512.png",
+        "type": "image/png",
+        "sizes": "512x512"
+      }
+    ],
+    "start_url": "/",
+    "background_color": "#F1B079",
+    "display": "standalone",
+    "theme_color": "#F1B079"
+  }
+  
