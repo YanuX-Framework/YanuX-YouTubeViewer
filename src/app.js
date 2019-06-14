@@ -25,62 +25,61 @@ import YouTubePlayer from 'youtube-player';
 import { FeathersCoordinator, Credentials, ComponentsRuleEngine } from '@yanux/coordinator';
 
 const componentsRestrictions = {
-    'viewer-form': {
-        'type': {
-            'value': 'smartphone',
-            'enforce': false
+    "viewer-form": {
+        "type": {
+            "value": "smartphone",
+            "enforce": false
         },
-        'display': true,
-        'input': {
-            'operator': 'OR',
-            'values': [{
-                'operator': 'AND',
-                'values': ['keyboard', 'mouse']
-            }, 'touchscreen']
+        "display": true,
+        "input": {
+            "operator": "OR",
+            "values": [{
+                "operator": "AND",
+                "values": ["keyboard", "mouse"]
+            }, "touchscreen"]
         }
     },
-    'controls': {
-        'type': {
-            'value': 'smartphone',
-            'enforce': false
+    "controls": {
+        "type": {
+            "value": "smartphone",
+            "enforce": false
         },
-        'display': true,
-        'input': {
-            'operator': 'OR',
-            'values': [{
-                'operator': 'AND',
-                'values': ['keyboard', 'mouse']
-            }, 'touchscreen']
+        "display": true,
+        "input": {
+            "operator": "OR",
+            "values": [{
+                "operator": "AND",
+                "values": ["keyboard", "mouse"]
+            }, "touchscreen"]
         }
     },
-    'player': {
-        'display': {
-            'operator': 'AND',
-            'values': {
-                'resolution': {
-                    'operator': '>=',
-                    'value': [960, null],
+    "player": {
+        "display": {
+            "operator": "AND",
+            "values": {
+                "resolution": {
+                    "operator": ">=",
+                    "value": [960, null]
                 },
-                'size': {
-                    'operator': '>=',
-                    'value': [160, 90],
-                    'enforce': false
+                "size": {
+                    "operator": ">=",
+                    "value": [160, 90],
+                    "enforce": false
                 }
             }
         },
-        'speakers': {
-            'channels': {
-                'operator': 'AND',
-                'values': [
-                    {
-                        'operator': '>=',
-                        'value': 2,
-                        'enforce': false
-                    },
-                    {
-                        'operator': '>=',
-                        'value': 1,
-                    }
+        "speakers": {
+            "channels": {
+                "operator": "AND",
+                "values": [{
+                    "operator": ">=",
+                    "value": 2,
+                    "enforce": false
+                },
+                {
+                    "operator": ">=",
+                    "value": 1
+                }
                 ]
             }
         }
