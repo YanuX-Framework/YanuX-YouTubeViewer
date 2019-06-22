@@ -27,13 +27,13 @@
         </nav>
     </header>
     <main>
-        <form id="viewer-form" class="yx-control" action="#">
+        <form id="viewer-form" class="yx-component" action="#">
             <label for="video-url">YouTube Video URL:</label>
             <input id="video-url" name="video-url" type="text">
             <input value="Load" type="submit" class="btn btn-primary">
         </form>
-        <div id="player" class="yx-view"></div>
-        <div id="controls" class="yx-control">
+        <div id="player" class="yx-component"></div>
+        <div id="controls" class="yx-component">
             <div class="input-group">
                 <input id="seekBar" class="form-control" name="seekBar" type="range" min="0" max="100" value="0">
                 <span id="playbackTimer" class="input-group-text">00:00/00:00</span>

@@ -140,6 +140,15 @@ function updateProxemics(coordinator, proxemics) {
             const componentsRuleEngine = new ComponentsRuleEngine(localDeviceUuid, activeInstances, proxemics, componentsRestrictions);
             componentsRuleEngine.run().then(data => {
                 console.log('Components Config:', data.componentsConfig);
+                //NOTE: Uncomment to force the desired configuration!
+                /*
+                for(const c in data.componentsConfig) {
+                    data.componentsConfig[c] = true;
+                }
+                data.componentsConfig['viewer-form'] = true;
+                data.componentsConfig['controls'] = true;
+                data.componentsConfig['player'] = true;
+                */
                 applyComponentsConfig(data.componentsConfig);
                 resolve();
             }).catch(e => reject(e));
