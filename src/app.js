@@ -142,13 +142,15 @@ function updateProxemics(coordinator, proxemics) {
                 console.log('Components Config:', data.componentsConfig);
                 //NOTE: Uncomment to force the desired configuration!
                 /*
-                for(const c in data.componentsConfig) {
-                    data.componentsConfig[c] = true;
-                }
                 data.componentsConfig['viewer-form'] = true;
                 data.componentsConfig['controls'] = true;
                 data.componentsConfig['player'] = true;
                 */
+                if (!proxemics[localDeviceUuid]) {
+                    for (const c in data.componentsConfig) {
+                        data.componentsConfig[c] = true;
+                    }
+                }
                 applyComponentsConfig(data.componentsConfig);
                 resolve();
             }).catch(e => reject(e));
@@ -176,10 +178,11 @@ function initLogout(coordinator) {
 
 function updatePlayer(player, state, prevState, coordinator) {
     if ($('#player').css('display') !== 'none') {
+        console.log('Testing...', $('#player').css('height'));
         if (!player) {
             player = YouTubePlayer('player', {
-                width: 1920,
-                height: 1080,
+                width: 0,
+                height: 0,
                 playerVars: { controls: 0 }
             });
             player.on('stateChange', e => {

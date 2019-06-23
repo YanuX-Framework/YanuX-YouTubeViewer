@@ -1,9 +1,27 @@
 @import "~bootstrap/scss/bootstrap.scss";
 
+html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 8px;
+}
+
 #player {
-    display: block;
-    width: 100vw;
-    height: 50vh;
+    flex-grow: 1;
 }
 
 /* NOTE: Uncomment to show guidelines around each component */
