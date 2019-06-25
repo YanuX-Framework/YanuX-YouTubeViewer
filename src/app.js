@@ -146,7 +146,8 @@ function updateProxemics(coordinator, proxemics) {
                 data.componentsConfig['controls'] = true;
                 data.componentsConfig['player'] = true;
                 */
-                if (!proxemics[localDeviceUuid]) {
+                const localDeviceCapabilities = activeInstances.find(i => i.device.deviceUuid === localDeviceUuid).device.capabilities;
+                if (!proxemics[localDeviceUuid] && localDeviceCapabilities.type !== 'laptop') {
                     for (const c in data.componentsConfig) {
                         data.componentsConfig[c] = true;
                     }
@@ -178,7 +179,6 @@ function initLogout(coordinator) {
 
 function updatePlayer(player, state, prevState, coordinator) {
     if ($('#player').css('display') !== 'none') {
-        console.log('Testing...', $('#player').css('height'));
         if (!player) {
             player = YouTubePlayer('player', {
                 width: 0,
@@ -202,12 +202,13 @@ function updatePlayer(player, state, prevState, coordinator) {
                     default: break;
                 }
                 if (e.data === 1) {
+                    const lastState = coordinator.resource.data;
                     const updateSeekBar = () => {
                         player.getCurrentTime().then(currTime => {
                             console.log('Current Time:', currTime);
-                            if (state.currTime !== currTime) {
-                                state.currTime = currTime;
-                                coordinator.setResourceData(state);
+                            if (lastState.currTime !== currTime) {
+                                lastState.currTime = currTime;
+                                coordinator.setResourceData(lastState);
                             }
                         });
                         if (state.state === 'play') {
@@ -218,11 +219,11 @@ function updatePlayer(player, state, prevState, coordinator) {
                     };
                     player.getDuration().then(duration => {
                         console.log('Duration:', duration);
-                        state.duration = duration;
-                        coordinator.setResourceData(state);
-                    });
+                        lastState.duration = duration;
+                        coordinator.setResourceData(lastState);
+                    })
                     updateSeekBar();
-                }
+                } else { clearTimeout(player.timer); }
             });
             player.cueVideoById(state.videoId, state.currTime);
         }
