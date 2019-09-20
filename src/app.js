@@ -141,11 +141,11 @@ function updateProxemics(coordinator, proxemics) {
             componentsRuleEngine.run().then(data => {
                 console.log('Components Config:', data.componentsConfig);
                 //NOTE: Uncomment to force the desired configuration!
-                /*
-                data.componentsConfig['viewer-form'] = true;
-                data.componentsConfig['controls'] = true;
-                data.componentsConfig['player'] = true;
-                */
+                
+                // data.componentsConfig['viewer-form'] = true;
+                // data.componentsConfig['controls'] = true;
+                // data.componentsConfig['player'] = true;
+                
                 const localDeviceCapabilities = activeInstances.find(i => i.device.deviceUuid === localDeviceUuid).device.capabilities;
                 if (!proxemics[localDeviceUuid] && localDeviceCapabilities.type !== 'laptop') {
                     for (const c in data.componentsConfig) {
