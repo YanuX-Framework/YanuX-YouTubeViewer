@@ -137,7 +137,7 @@ function updateProxemics(coordinator, proxemics) {
     console.log('Local Device UUID:', localDeviceUuid);
     return new Promise((resolve, reject) => {
         coordinator.getActiveInstances().then(activeInstances => {
-            const componentsRuleEngine = new ComponentsRuleEngine(localDeviceUuid, activeInstances, proxemics, componentsRestrictions);
+            const componentsRuleEngine = new ComponentsRuleEngine(localDeviceUuid, componentsRestrictions, proxemics, activeInstances);
             componentsRuleEngine.run().then(data => {
                 console.log('Components Config:', data.componentsConfig);
                 //NOTE: Uncomment to force the desired configuration!
