@@ -3,16 +3,16 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = {
-  mode: "development",
+  mode: 'development',
   entry: './src/app.js',
-  devtool: "source-map",
+  devtool: 'source-map',
   output: {
     filename: 'bundle.js',
     path: path.resolve(__dirname, 'dist')
   },
   module: {
     rules: [
-      { enforce: "pre", test: /\.js$/, loader: "source-map-loader" },
+      { enforce: 'pre', test: /\.js$/, loader: 'source-map-loader' },
       { test: /\.css$/, use: ['style-loader', 'css-loader'] },
       {
         test: /\.(scss)$/,
