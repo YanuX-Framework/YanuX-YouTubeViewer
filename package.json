@@ -40,7 +40,7 @@
     "popper.js": "^1.16.1",
     "postcss-loader": "^3.0.0",
     "precss": "^4.0.0",
-    "query-string": "^6.10.1",
+    "query-string": "^6.11.0",
     "sass-loader": "^8.0.2",
     "source-map-loader": "^0.2.4",
     "style-loader": "^1.1.3",
