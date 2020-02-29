@@ -132,12 +132,13 @@ function initDisplay(params) {
 }
 
 function updateProxemics(coordinator, proxemics) {
+    const localInstanceUuid = coordinator.instance.instanceUuid;
     const localDeviceUuid = coordinator.device.deviceUuid;
     console.log('Proxemics:', proxemics);
     console.log('Local Device UUID:', localDeviceUuid);
     return new Promise((resolve, reject) => {
         coordinator.getActiveInstances().then(activeInstances => {
-            const componentsRuleEngine = new ComponentsRuleEngine(localDeviceUuid, componentsRestrictions, proxemics, activeInstances);
+            const componentsRuleEngine = new ComponentsRuleEngine(localInstanceUuid, localDeviceUuid, componentsRestrictions, proxemics, activeInstances);
             componentsRuleEngine.run().then(data => {
                 console.log('Components Config:', data.componentsConfig);
                 //NOTE: Uncomment to force the desired configuration!
