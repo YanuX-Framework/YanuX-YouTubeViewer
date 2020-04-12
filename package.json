@@ -6,7 +6,7 @@
   "main": "index.js",
   "scripts": {
     "package": "npx webpack",
-    "serve": "npx http-server ./dist -p 3005 -c-1",
+    "serve": "npx serve ./dist -l 3005",
     "watch": "npm run watch:package",
     "watch:package": "npx webpack --watch",
     "start": "npm-run-all --parallel serve watch",
@@ -19,7 +19,7 @@
   },
   "license": "AGPL-3.0",
   "dependencies": {
-    "http-server": "^0.12.1"
+    "serve": "^11.3.0"
   },
   "devDependencies": {
     "@fortawesome/fontawesome-free": "^5.13.0",
