@@ -36,6 +36,7 @@ module.exports = {
       }
     ]
   },
+  stats: { warningsFilter: [/Failed to parse source map/] },
   node: {
     fs: 'empty'
   },
@@ -45,9 +46,11 @@ module.exports = {
       // Load a custom template (lodash by default see the FAQ for details)
       template: 'src/index.html'
     }),
-    new CopyPlugin([
-      { from: '*.json', context: 'src/' },
-      { from: 'images/*', context: 'src/' }
-    ])
+    new CopyPlugin({
+      patterns: [
+        { from: '*.json', context: 'src/' },
+        { from: 'images/*', context: 'src/' }
+      ]
+    })
   ]
 };
