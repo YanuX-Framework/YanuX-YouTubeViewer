@@ -14,7 +14,7 @@ library.add(fab);
 dom.watch();
 
 //lodash
-import _ from 'lodash';
+import { assign, omit } from 'lodash';
 //jQuery
 import $ from 'jquery';
 //query-string
@@ -57,7 +57,7 @@ const componentsRestrictions = {
         "display": {
             "operator": "AND",
             "values": {
-                "resolution": {
+                "virtualResolution": {
                     "operator": ">=",
                     "value": [960, null]
                 },
@@ -140,9 +140,8 @@ function updateProxemics(coordinator, proxemics) {
         coordinator.getActiveInstances().then(activeInstances => {
             const componentsRuleEngine = new ComponentsRuleEngine(localInstanceUuid, localDeviceUuid, componentsRestrictions, proxemics, activeInstances);
             componentsRuleEngine.run().then(data => {
-                console.log('Components Config:', data.componentsConfig);
+                console.log('Components Rule Engine Result:', data);
                 //NOTE: Uncomment to force the desired configuration!
-                
                 // data.componentsConfig['viewer-form'] = true;
                 // data.componentsConfig['controls'] = true;
                 // data.componentsConfig['player'] = true;
@@ -163,7 +162,7 @@ function updateProxemics(coordinator, proxemics) {
 function initLogin() {
     const loginLink = document.querySelector('#login a');
     loginLink.textContent = 'Login'
-    loginLink.href = `http://${window.location.hostname}:3001/oauth2/authorize?client_id=yanux-youtube-viewer&response_type=token&redirect_uri=${window.location.href}`
+    loginLink.href = `http://${location.hostname}:3001/oauth2/authorize?client_id=yanux-youtube-viewer&response_type=token&redirect_uri=${location.href}`
     loginLink.onclick = null;
 }
 
@@ -255,7 +254,7 @@ function updatePlayer(player, state, prevState, coordinator) {
     seekBar.value = Math.floor(state.currTime);
     seekBar.max = Math.floor(state.duration);
     playbackTimer.textContent = printTime(state.currTime) + '/' + printTime(state.duration);
-    _.assign(prevState, state);
+    assign(prevState, state);
     return { state, prevState, player };
 }
 
@@ -373,14 +372,15 @@ function main() {
     const params = queryString.parse(location.hash);
     console.log('Params:', params);
     const coordinator = new FeathersCoordinator(
-        params.brokerUrl || `http://${window.location.hostname}:3002`,
+        params.brokerUrl || `http://${location.hostname}:3002`,
         params.localDeviceUrl || 'http://localhost:3003',
         params.app || 'yanux-youtube-viewer'
     );
     initDisplay(params);
     initLogin();
-    if (!params.access_token) {
-        sessionStorage.setItem('hash', window.location.hash);
+    if (!params.access_token && !params.token_type) {
+        const hash = queryString.stringify(omit(params, ["access_token", "token_type"]));
+        sessionStorage.setItem("hash", hash)
     }
     if (coordinator.credentials) {
         initCoordinator(coordinator, player);
