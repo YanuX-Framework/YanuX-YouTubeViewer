@@ -32,7 +32,7 @@
     "autoprefixer": "^9.8.5",
     "bootstrap": "^4.5.0",
     "copy-webpack-plugin": "^6.0.3",
-    "css-loader": "^3.6.0",
+    "css-loader": "^4.0.0",
     "html-webpack-plugin": "^4.3.0",
     "jquery": "^3.5.1",
     "lodash": "^4.17.19",
@@ -44,7 +44,7 @@
     "sass-loader": "^9.0.2",
     "source-map-loader": "^1.0.1",
     "style-loader": "^1.2.1",
-    "webpack": "^4.43.0",
+    "webpack": "^4.44.0",
     "webpack-cli": "^3.3.12",
     "youtube-player": "^5.5.2"
   }
