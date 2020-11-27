@@ -29,7 +29,7 @@
     "@fortawesome/free-regular-svg-icons": "^5.15.1",
     "@fortawesome/free-solid-svg-icons": "^5.15.1",
     "@yanux/coordinator": "^1.0.0",
-    "autoprefixer": "^10.0.2",
+    "autoprefixer": "^10.0.3",
     "bootstrap": "^4.5.3",
     "copy-webpack-plugin": "^6.3.2",
     "css-loader": "^5.0.1",
