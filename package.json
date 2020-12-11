@@ -31,7 +31,7 @@
     "@yanux/coordinator": "^1.0.0",
     "autoprefixer": "^10.1.0",
     "bootstrap": "^4.5.3",
-    "copy-webpack-plugin": "^6.4.0",
+    "copy-webpack-plugin": "^7.0.0",
     "css-loader": "^5.0.1",
     "html-webpack-plugin": "^4.5.0",
     "jquery": "^3.5.1",
