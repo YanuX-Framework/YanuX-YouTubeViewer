@@ -20,7 +20,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "serve": "^12.0.0"
+    "serve": "^13.0.2"
   },
   "devDependencies": {
     "@fortawesome/fontawesome-free": "^5.15.2",
@@ -32,7 +32,7 @@
     "@yanux/coordinator": "file:../Coordinator",
     "autoprefixer": "^10.2.4",
     "bootstrap": "^5.0.1",
-    "copy-webpack-plugin": "^9.0.0",
+    "copy-webpack-plugin": "^10.2.0",
     "css-loader": "^6.3.0",
     "html-webpack-plugin": "^5.2.0",
     "jquery": "^3.5.1",
